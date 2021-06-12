@@ -1,0 +1,79 @@
+# This file declares the list of source files that should be exempt from
+# AddressSanitizer instrumentation. Usually, this is because a file is used by
+# the AddressSanitizer runtime itself, or because the code executes before
+# the runtime has been initialized.
+
+[.*]
+
+# Blanket ignore non-sanitized functions
+fun:__nosan_*
+
+# Try really hard to avoid panicing while debugging
+src:/Users/jogn/XNU/xnu-7195.81.3/osfmk/kdp/*
+src:/Users/jogn/XNU/xnu-7195.81.3/osfmk/kern/debug.c
+
+[address]
+
+# Exclude linker sets
+type:struct linker_set_entry
+type:linker_set_entry
+type:struct startup_entry
+type:startup_entry
+
+# Exclude per-cpu data structures the assembly accesses
+type:vm_statistics64
+type:struct vm_statistics64
+type:vm_statistics64_data_t
+type:struct processor
+type:processor
+
+# Exclude KASan itself
+src:/Users/jogn/XNU/xnu-7195.81.3/san/kasan.c
+src:/Users/jogn/XNU/xnu-7195.81.3/san/kasan-fakestack.c
+src:/Users/jogn/XNU/xnu-7195.81.3/san/kasan-x86_64.c
+src:/Users/jogn/XNU/xnu-7195.81.3/san/kasan-memintrinsics.c
+src:/Users/jogn/XNU/xnu-7195.81.3/san/kasan_dynamic_blacklist.c
+
+# Exclude other sanitizers
+src:/Users/jogn/XNU/xnu-7195.81.3/san/ksancov.c
+
+# Exclude dtrace function that does weird stack manipulations
+fun:fbt_perfCallback
+
+# Exclude leak detection code that reads all memory
+fun:_ZL18IOTrackingLeakScanPv
+
+# Exclude KASAN dependencies
+# XXX: could this be relaxed since fakestack is reentrant?
+src:/Users/jogn/XNU/xnu-7195.81.3/osfmk/kern/zalloc.c
+src:/Users/jogn/XNU/xnu-7195.81.3/osfmk/kern/zcache.c
+
+[.*]
+src:/Users/jogn/XNU/xnu-7195.81.3/san/ubsan*
+
+[bounds]
+src:/Users/jogn/XNU/xnu-7195.81.3/osfmk/corecrypto/*
+
+[alignment]
+
+src:/Users/jogn/XNU/xnu-7195.81.3/libsa/bootstrap.cpp
+src:/Users/jogn/XNU/xnu-7195.81.3/bsd/net/necp_client.c
+src:/Users/jogn/XNU/xnu-7195.81.3/pexpert/arm/pe_identify_machine.c
+
+[object-size]
+src:/Users/jogn/XNU/xnu-7195.81.3/osfmk/i386/locks_i386.c
+
+# ARM64 specific blacklist
+
+[address]
+
+# Exclude KASan runtime
+src:/Users/jogn/XNU/xnu-7195.81.3/san/kasan-arm64.c
+src:/Users/jogn/XNU/xnu-7195.81.3/osfmk/arm/machine_routines_common.c
+
+# These use a local variable to work out which stack we're on, but can end up with
+# a fakestack allocation.
+fun:ml_at_interrupt_context
+fun:ml_stack_remaining
+fun:ml_stack_base
+fun:ml_stack_size
